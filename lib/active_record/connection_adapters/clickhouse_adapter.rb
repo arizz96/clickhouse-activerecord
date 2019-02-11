@@ -1,8 +1,13 @@
+# frozen_string_literal: true
+
 require 'clickhouse-activerecord/arel/visitors/to_sql'
 require 'active_record/connection_adapters/abstract_adapter'
 require 'active_record/connection_adapters/clickhouse/oid/date'
 require 'active_record/connection_adapters/clickhouse/oid/date_time'
 require 'active_record/connection_adapters/clickhouse/oid/big_integer'
+require 'active_record/connection_adapters/clickhouse/schema_definitions'
+require 'active_record/connection_adapters/clickhouse/schema_creation'
+require 'active_record/connection_adapters/clickhouse/schema_statements'
 
 module ActiveRecord
   class Base
@@ -25,27 +30,19 @@ module ActiveRecord
   end
 
   module ModelSchema
-
-    module ClassMethods
+     module ClassMethods
       def is_view
         @is_view || false
       end
-
-      # @param [Boolean] value
+       # @param [Boolean] value
       def is_view=(value)
         @is_view = value
       end
     end
-
-  end
+   end
 
   module ConnectionAdapters
-
     class ClickhouseColumn < Column
-      def initialize(name, default, cast_type, sql_type = nil, null = true)
-        super(name, default, cast_type, sql_type, null)
-        @default_function = 'now'
-      end
 
       private
 
@@ -90,14 +87,17 @@ module ActiveRecord
       ADAPTER_NAME = 'Clickhouse'.freeze
 
       NATIVE_DATABASE_TYPES = {
-        string: { name: 'String', limit: 255 },
+        string: { name: 'String' },
         integer: { name: 'UInt32' },
-        big_integer: { name: 'UInt64', limit: 8 },
+        big_integer: { name: 'UInt64' },
         float: { name: 'Float32' },
+        decimal: { name: 'Decimal' },
         datetime: { name: 'DateTime' },
         date: { name: 'Date' },
         boolean: { name: 'UInt8' }
       }.freeze
+
+      include Clickhouse::SchemaStatements
 
       # Initializes and connects a Clickhouse adapter.
       def initialize(connection, logger, connection_parameters, config)
@@ -105,9 +105,13 @@ module ActiveRecord
         @connection_parameters = connection_parameters
         @config = config
 
-        @visitor = ClickhouseActiverecord::Arel::Visitors::ToSql.new self
+        @prepared_statements = false
 
         connect
+      end
+
+      def arel_visitor # :nodoc:
+        ClickhouseActiverecord::Arel::Visitors::ToSql.new(self)
       end
 
       def native_database_types #:nodoc:
@@ -147,59 +151,11 @@ module ActiveRecord
         m.alias_type 'Int64', 'UInt64'
       end
 
-      # Queries the database and returns the results in an Array-like object
-      def query(sql, _name = nil)
-        res = @connection.post("/?#{@config.to_param}", "#{sql} FORMAT JSONCompact")
-        raise ActiveRecord::ActiveRecordError, "Response code: #{res.code}:\n#{res.body}" unless res.code.to_i == 200
-        JSON.parse res.body
-      end
-
-      def execute(sql, name = nil)
-        log(sql, "#{adapter_name} #{name}") do
-          query sql, name
-        end
-      end
-
-      def exec_query(sql, name = nil, _binds = [])
-        result = execute(sql, name)
-        ActiveRecord::Result.new(result['meta'].map { |m| m['name'] }, result['data'])
-      end
-
       # Executes insert +sql+ statement in the context of this connection using
       # +binds+ as the bind substitutes. +name+ is logged along with
       # the executed +sql+ statement.
-      def exec_insert(sql, name, _binds, _pk = nil, _sequence_name = nil)
-        log(sql, "#{adapter_name} #{name}") do
-          res = @connection.post("/?#{@config.to_param}", sql)
-          raise ActiveRecord::ActiveRecordError, "Response code: #{res.code}:\n#{res.body}" unless res.code.to_i == 200
-          true
-        end
-      end
-
-      def update(_arel, _name = nil, _binds = [])
-        raise ActiveRecord::ActiveRecordError, 'Clickhouse update is not supported'
-      end
-
-      def delete(_arel, _name = nil, _binds = [])
-        raise ActiveRecord::ActiveRecordError, 'Clickhouse delete is not supported'
-      end
 
       # SCHEMA STATEMENTS ========================================
-
-      def tables(name = nil)
-        query('SHOW TABLES', name)['data'].flatten
-      end
-
-      def columns(table_name, _name = nil) #:nodoc:
-        table_structure(table_name).map do |field|
-          ClickhouseColumn.new(field[0], field[3].present? ? field[3] : nil, lookup_cast_type(field[1]), field[1], field[1].include?('Nullable'))
-        end
-      end
-
-      def indexes(_table_name, _name = nil) #:nodoc:
-        Rails.logger.warn 'Clickhouse indexes is not supported'
-        []
-      end
 
       def primary_key(table_name) #:nodoc:
         pk = table_structure(table_name).first
@@ -208,12 +164,6 @@ module ActiveRecord
       end
 
       protected
-
-      def table_structure(table_name)
-        data = query("DESCRIBE TABLE #{table_name}", table_name)['data']
-        raise(ActiveRecord::StatementInvalid, "Could not find table '#{table_name}'") if data.empty?
-        data
-      end
 
       def last_inserted_id(result)
         result

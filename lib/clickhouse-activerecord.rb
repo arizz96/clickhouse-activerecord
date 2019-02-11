@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'active_record/connection_adapters/clickhouse_adapter'
 
 if defined?(Rails::Railtie)

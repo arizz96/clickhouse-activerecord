@@ -1,6 +1,6 @@
 # Clickhouse::Activerecord
 
-A Ruby database ActiveRecord driver for ClickHouse.
+A Ruby database ActiveRecord driver for ClickHouse. Support Rails >= 5.0.
 
 ## Installation
 
@@ -29,6 +29,7 @@ development_clickhouse:
   host: localhost
   username: username
   password: password
+  debug: true # use for showing in to log technical information
 ```
 
 Add to your model:
@@ -47,7 +48,7 @@ class ActionView < ActiveRecord::Base
 end
 ```
 
-Or global connection, but schema dump don't works:
+Or global connection:
 
 ```yml
 development:
@@ -61,9 +62,9 @@ development:
 Schema dump:
 
     $ rake clickhouse:schema:dump
-    
+
 We use schema for emulate development or tests environment on PostgreSQL adapter.
-    
+
 ### Insert and select data
 
 ```ruby
@@ -80,7 +81,20 @@ ActionView.maximum(:date)
 #=> 'Wed, 29 Nov 2017'
 ```
 
+ActionView.maximum(:date)
+# Clickhouse (10.3ms)  SELECT maxMerge(actions.date) FROM actions
+#=> 'Wed, 29 Nov 2017'
+```
+
 ## Donations
+
+Donations to this project are going directly to [PNixx](https://github.com/PNixx), the original author of this project:
+
+* BTC address: `1Lx2gaJtzfF2dxGFxB65YtY5kNY9xUi6ia`
+* ETH address: `0x6F094365A70fe7836A633d2eE80A1FA9758234d5`
+* XMR address: `42gP71qLB5M43RuDnrQ3vSJFFxis9Kw9VMURhpx9NLQRRwNvaZRjm2TFojAMC8Fk1BQhZNKyWhoyJSn5Ak9kppgZPjE17Zh`
+
+## Development
 
 Donations to this project are going directly to [PNixx](https://github.com/PNixx), the original author of this project:
 
