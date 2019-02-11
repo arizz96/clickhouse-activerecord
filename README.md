@@ -1,6 +1,6 @@
 # Clickhouse::Activerecord
 
-A Ruby database ActiveRecord driver for ClickHouse. Support Rails >= 5.0.
+A Ruby database ActiveRecord driver for ClickHouse.
 
 ## Installation
 
