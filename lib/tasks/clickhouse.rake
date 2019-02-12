@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 namespace :clickhouse do
 
   namespace :schema do

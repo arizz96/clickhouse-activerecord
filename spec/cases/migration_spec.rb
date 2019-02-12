@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 RSpec.describe 'Migration', :migrations do
   describe 'performs migrations' do
     let(:model) do

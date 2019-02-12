@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 RSpec.describe 'Model', :migrations do
   let(:model) do
     Class.new(ActiveRecord::Base) do

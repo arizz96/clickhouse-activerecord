@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 require 'clickhouse-activerecord/arel/visitors/to_sql'
 require 'active_record/connection_adapters/abstract_adapter'
 require 'active_record/connection_adapters/clickhouse/oid/date'
