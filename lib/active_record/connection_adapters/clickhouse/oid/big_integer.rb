@@ -3,7 +3,6 @@ module ActiveRecord
     module Clickhouse
       module OID # :nodoc:
         class BigInteger < Type::BigInteger # :nodoc:
-
           DEFAULT_LIMIT = 8
 
           def limit
@@ -15,7 +14,6 @@ module ActiveRecord
           def _limit
             DEFAULT_LIMIT
           end
-
         end
       end
     end

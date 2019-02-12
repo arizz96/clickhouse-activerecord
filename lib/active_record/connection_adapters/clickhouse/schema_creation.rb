@@ -3,7 +3,7 @@ module ActiveRecord
     module Clickhouse
       class SchemaCreation < AbstractAdapter::SchemaCreation# :nodoc:
         def visit_AddColumnDefinition(o)
-          +"ADD COLUMN #{accept(o.column)}"
+          "ADD COLUMN #{accept(o.column)}"
         end
 
         def add_column_options!(sql, options)

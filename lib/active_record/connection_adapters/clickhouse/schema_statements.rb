@@ -25,6 +25,7 @@ module ActiveRecord
           raise ActiveRecord::ActiveRecordError, 'Clickhouse delete is not supported'
         end
 
+        # Returns the list of all tables in the schema search path.
         def tables(name = nil)
           result = do_system_execute('SHOW TABLES', name)
           return [] if result.nil?
@@ -38,6 +39,14 @@ module ActiveRecord
 
         def data_sources
           tables
+        end
+
+        # Returns the list of all column definitions for a table.
+        def columns(table_name)
+          # Limit, precision, and scale are all handled by the superclass.
+          column_definitions(table_name).map do |column_name, type, default_value, _, _, _|
+            new_column(column_name, default_value, type, nil, nil)
+          end
         end
 
         def do_system_execute(sql, name = nil)
