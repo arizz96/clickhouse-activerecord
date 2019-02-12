@@ -1,4 +1,4 @@
-require 'clickhouse-activerecord/arel/visitors/to_sql'
+require 'clickhouse-activerecord/arel/visitors/clickhouse'
 require 'active_record/connection_adapters/abstract_adapter'
 require 'active_record/connection_adapters/clickhouse/oid/date'
 require 'active_record/connection_adapters/clickhouse/oid/date_time'
