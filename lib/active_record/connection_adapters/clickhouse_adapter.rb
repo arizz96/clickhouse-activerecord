@@ -3,6 +3,7 @@ require 'active_record/connection_adapters/abstract_adapter'
 require 'active_record/connection_adapters/clickhouse/oid/date'
 require 'active_record/connection_adapters/clickhouse/oid/date_time'
 require 'active_record/connection_adapters/clickhouse/oid/big_integer'
+require 'active_record/connection_adapters/clickhouse/oid/uuid'
 require 'active_record/connection_adapters/clickhouse/schema_definitions'
 require 'active_record/connection_adapters/clickhouse/schema_creation'
 require 'active_record/connection_adapters/clickhouse/schema_statements'
@@ -67,28 +68,6 @@ module ActiveRecord
 
         @type_map = Type::HashLookupTypeMap.new
         initialize_type_map(type_map)
-      end
-
-      # Is this connection alive and ready for queries?
-      def active?
-        @connection.query 'SELECT 1'
-        true
-      rescue ArgumentError
-        false
-      end
-
-      # Close then reopen the connection.
-      def reconnect!
-        super
-        @connection.reset
-        configure_connection
-      end
-
-      # Disconnects from the database if already connected. Otherwise, this
-      # method does nothing.
-      def disconnect!
-        super
-        @connection.close rescue nil
       end
 
       def native_database_types #:nodoc:
@@ -167,7 +146,7 @@ module ActiveRecord
       end
 
       def connect
-        @connection = Net::HTTP.start(@connection_parameters[0], @connection_parameters[1])
+        @connection = Net::HTTP.start(@connection_parameters[:host], @connection_parameters[:port])
       end
 
       # Configures the encoding, verbosity, schema search path, and time zone of the connection.
