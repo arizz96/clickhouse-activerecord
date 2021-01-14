@@ -79,7 +79,6 @@ module ActiveRecord
 
     class ClickhouseAdapter < AbstractAdapter
       ADAPTER_NAME = 'Clickhouse'.freeze
-
       NATIVE_DATABASE_TYPES = {
         string: { name: 'String' },
         integer: { name: 'Int32' },
@@ -89,7 +88,21 @@ module ActiveRecord
         decimal: { name: 'Decimal' },
         datetime: { name: 'DateTime' },
         date: { name: 'Date' },
-        boolean: { name: 'UInt8' }
+        boolean: { name: 'UInt8' },
+                               
+        int8:  { name: 'Int8' },
+        int16: { name: 'Int16' },
+        int32: { name: 'Int32' },
+        int64:  { name: 'Int64' },
+        int128: { name: 'Int128' },
+        int256: { name: 'Int256' },
+
+        uint8: { name: 'UInt8' },
+        uint16: { name: 'UInt16' },
+        uint32: { name: 'UInt32' },
+        uint64: { name: 'UInt64' },
+        # uint128: { name: 'UInt128' }, not yet implemented in clickhouse
+        uint256: { name: 'UInt256' },
       }.freeze
 
       include Clickhouse::SchemaStatements
@@ -155,14 +168,17 @@ module ActiveRecord
         register_class_with_limit m, %r(String), Type::String
         register_class_with_limit m, 'Date', Clickhouse::OID::Date
         register_class_with_limit m, 'DateTime', Clickhouse::OID::DateTime
-        register_class_with_limit m, %r(Uint8), Type::UnsignedInteger
-        m.alias_type 'UInt16', 'UInt8'
-        m.alias_type 'UInt32', 'UInt8'
-        register_class_with_limit m, %r(UInt64), Type::UnsignedInteger
+        
         register_class_with_limit m, %r(Int8), Type::Integer
+        register_class_with_limit m, %r(Int16), Type::Integer
+        register_class_with_limit m, %r(Int32), Type::Integer
+        register_class_with_limit m, %r(Int64), Type::Integer
+        register_class_with_limit m, %r(Int128), Type::Integer
+        register_class_with_limit m, %r(Int256), Type::Integer
+
         m.alias_type 'Int16', 'Int8'
         m.alias_type 'Int32', 'Int8'
-        register_class_with_limit m, %r(Int64), Type::Integer
+
         m.register_type %r{\Adecimal}i do |sql_type|
           scale = extract_scale(sql_type)
           precision = extract_precision(sql_type)
