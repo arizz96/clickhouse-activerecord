@@ -82,7 +82,8 @@ module ActiveRecord
 
       NATIVE_DATABASE_TYPES = {
         string: { name: 'String' },
-        integer: { name: 'UInt32' },
+        integer: { name: 'Int32' },
+        uinteger: { name: 'UInt32' },
         big_integer: { name: 'UInt64' },
         float: { name: 'Float32' },
         decimal: { name: 'Decimal' },
@@ -152,8 +153,8 @@ module ActiveRecord
       def initialize_type_map(m) # :nodoc:
         super
         register_class_with_limit m, %r(String), Type::String
-        register_class_with_limit m, 'Date',  Clickhouse::OID::Date
-        register_class_with_limit m, 'DateTime',  Clickhouse::OID::DateTime
+        register_class_with_limit m, 'Date', Clickhouse::OID::Date
+        register_class_with_limit m, 'DateTime', Clickhouse::OID::DateTime
         register_class_with_limit m, %r(Uint8), Type::UnsignedInteger
         m.alias_type 'UInt16', 'UInt8'
         m.alias_type 'UInt32', 'UInt8'
@@ -162,6 +163,11 @@ module ActiveRecord
         m.alias_type 'Int16', 'Int8'
         m.alias_type 'Int32', 'Int8'
         register_class_with_limit m, %r(Int64), Type::Integer
+        m.register_type %r{\Adecimal}i do |sql_type|
+          scale = extract_scale(sql_type)
+          precision = extract_precision(sql_type)
+          Type::Decimal.new precision: precision, scale: scale
+        end
       end
 
       # Quoting time without microseconds
@@ -315,6 +321,17 @@ module ActiveRecord
           end
         end
         options
+      end
+
+      def extract_scale(sql_type)
+        case sql_type
+        when /\((\d+)\)/ then 0
+        when /\((\d+)(,\s*(\d+))\)/ then $3.to_i
+        end
+      end
+
+      def extract_precision(sql_type)
+        $1.to_i if sql_type =~ /\((\d+)(,\s*\d+)?\)/
       end
     end
   end
