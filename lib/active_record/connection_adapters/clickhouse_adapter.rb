@@ -295,6 +295,16 @@ module ActiveRecord
         cluster ? "#{sql} ON CLUSTER #{cluster}" : sql
       end
 
+      def begin_db_transaction ; end
+
+      def commit_db_transaction ; end
+
+      def create_savepoint(name = nil) ; end
+
+      def rollback_to_savepoint(name = nil) ; end
+
+      def release_savepoint(name = nil) ; end
+
       protected
 
       def last_inserted_id(result)
