@@ -21,11 +21,20 @@ module ActiveRecord
           raise ActiveRecord::ActiveRecordError, "Response: #{result}"
         end
 
-        def exec_update(_sql, _name = nil, _binds = [])
-          raise ActiveRecord::ActiveRecordError, 'Clickhouse update is not supported'
+        def exec_update(sql, name = nil, binds = [])
+          if sql =~ /^UPDATE\s+([a-z0-9\_\.\-\"\'\`]*)\s+SET\s+(.+)$/i
+            table_name = $1
+            values_and_conditions = $2
+            values_and_conditions.gsub!("#{table_name}.", '')
+
+            new_sql = "ALTER TABLE #{table_name} UPDATE #{values_and_conditions}"
+
+            do_execute(new_sql, name, format: nil)
+            true
+          end
         end
 
-        def exec_delete(_sql, _name = nil, _binds = [])
+        def exec_delete(sql, name = nil, binds = [])
           raise ActiveRecord::ActiveRecordError, 'Clickhouse delete is not supported'
         end
 
@@ -40,7 +49,7 @@ module ActiveRecord
           { options: sql.gsub(/^(?:.*?)ENGINE = (.*?)$/, '\\1') }
         end
 
-        # Not indexes on clickhouse
+        # No indexes on clickhouse
         def indexes(table_name, name = nil)
           []
         end
