@@ -69,19 +69,8 @@ HEADER
             tbl.print ', materialized: true' if match && match[1].presence
           end
 
-          case pk
-          when String
-            tbl.print ", primary_key: #{pk.inspect}" unless pk == "id"
-            pkcol = columns.detect { |c| c.name == pk }
-            pkcolspec = column_spec_for_primary_key(pkcol)
-            if pkcolspec.present?
-              tbl.print ", #{format_colspec(pkcolspec)}"
-            end
-          when Array
-            tbl.print ", primary_key: #{pk.inspect}"
-          else
-            tbl.print ", id: false"
-          end
+          # ClickHouse adapter won't include PK when creating table, so there aren't any specific logic about
+          tbl.print ", id: false"
 
           unless simple
             table_options = @connection.table_options(table)
@@ -92,11 +81,10 @@ HEADER
 
           tbl.puts ", force: :cascade do |t|"
 
-          # then dump all non-primary key columns
+          # then dump all columns
           if simple || !match
             columns.each do |column|
               raise StandardError, "Unknown type '#{column.sql_type}' for column '#{column.name}'" unless @connection.valid_type?(column.type)
-              next if column.name == pk
               type, colspec = column_spec(column)
               tbl.print "    t.#{type} #{column.name.inspect}"
               tbl.print ", #{format_colspec(colspec)}" if colspec.present?
