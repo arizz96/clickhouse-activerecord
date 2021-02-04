@@ -44,9 +44,9 @@ HEADER
     def table(table, stream)
       if table.match(/^\.inner/).nil?
         unless simple
-          # stream.puts "  # TABLE: #{table}"
+          stream.puts "  # TABLE: #{table}"
           sql = @connection.show_create_table(table)
-          # stream.puts "  # SQL: #{sql.gsub(/ENGINE = Replicated(.*?)\('[^']+',\s*'[^']+',?\s?([^\)]*)?\)/, "ENGINE = \\1(\\2)")}" if sql
+          stream.puts "  # SQL: #{sql.gsub(/ENGINE = Replicated(.*?)\('[^']+',\s*'[^']+',?\s?([^\)]*)?\)/, "ENGINE = \\1(\\2)")}" if sql
           # super(table.gsub(/^\.inner\./, ''), stream)
 
           # detect view table
