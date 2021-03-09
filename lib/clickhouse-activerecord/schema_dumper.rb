@@ -126,5 +126,10 @@ HEADER
         super
       end
     end
+
+    def schema_limit(column)
+      return nil if column.type == :float
+      super
+    end
   end
 end
