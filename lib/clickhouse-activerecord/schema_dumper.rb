@@ -55,7 +55,7 @@ HEADER
           # super(table.gsub(/^\.inner\./, ''), stream)
 
           # detect view table
-          match = sql.match(/^CREATE\s+(MATERIALIZED)\s+VIEW/)
+          match = sql.match(/^CREATE\s+(MATERIALIZED\s+)?VIEW/)
         end
 
         # Copy from original dumper
