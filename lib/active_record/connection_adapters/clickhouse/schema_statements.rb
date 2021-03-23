@@ -46,6 +46,8 @@ module ActiveRecord
 
         def table_options(table)
           sql = show_create_table(table)
+          return { options: "AS SELECT #{sql.gsub(/^(?:.*?) AS SELECT (.*?)$/, '\\1')}" } if sql.match(/^CREATE\sVIEW/)
+
           { options: sql.gsub(/^(?:.*?)ENGINE = (.*?)$/, '\\1') }
         end
 
