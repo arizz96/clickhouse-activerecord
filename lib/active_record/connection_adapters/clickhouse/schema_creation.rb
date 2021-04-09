@@ -20,8 +20,12 @@ module ActiveRecord
           sql
         end
 
-        def add_table_options!(create_sql, options, view, materialized)
-          if options[:options].present? && view.present? && materialized.blank?
+        def add_table_options!(create_sql, options)
+          is_view = create_sql.match(/^CREATE\s+(MATERIALIZED\s+)?VIEW/)
+          if options[:options].present? && is_view && !create_sql.match(/^CREATE\s+MATERIALIZED\s+/)
+            create_sql << options[:options]
+          elsif options[:options].present? && is_view && options[:options].match(/(^|\s)TO\s+/)
+            options[:options] = "TO #{options[:options].gsub(/^(?:.*?) TO (.*?)$/, '\\1')}"
             create_sql << options[:options]
           elsif options[:options].present?
             create_sql << " ENGINE = #{options[:options]}"
@@ -41,7 +45,7 @@ module ActiveRecord
           statements << accept(o.primary_keys) if o.primary_keys
 
           create_sql << "(#{statements.join(', ')})" if statements.present?
-          add_table_options!(create_sql, table_options(o), o.view, o.materialized)
+          add_table_options!(create_sql, table_options(o))
           create_sql << " AS #{to_sql(o.as)}" if o.as
           create_sql
         end
