@@ -21,8 +21,10 @@ module ActiveRecord
         end
 
         def add_table_options!(create_sql, options)
-          is_view = create_sql.match(/^CREATE\s+(MATERIALIZED\s+)?VIEW/)
-          if options[:options].present? && is_view && !create_sql.match(/^CREATE\s+MATERIALIZED\s+/)
+          is_view = create_sql.match(/^CREATE\s+((MATERIALIZED|LIVE)\s+)?VIEW/)
+          if options[:options].present? && is_view && create_sql.match(/^CREATE\s+LIVE\s+VIEW\s+/)
+            create_sql.replace(options[:options])
+          elsif options[:options].present? && is_view && !create_sql.match(/^CREATE\s+MATERIALIZED\s+/)
             create_sql << options[:options]
           elsif options[:options].present? && is_view && options[:options].match(/(^|\s)TO\s+/)
             options[:options] = "TO #{options[:options].gsub(/^(?:.*?) TO (.*?)$/, '\\1')}"
@@ -52,8 +54,9 @@ module ActiveRecord
 
         # Returns any SQL string to go between CREATE and TABLE. May be nil.
         def table_modifier_in_create(o)
-          " TEMPORARY" if o.temporary
-          " MATERIALIZED" if o.materialized
+          return " TEMPORARY" if o.temporary
+          return " MATERIALIZED" if o.materialized
+          return " LIVE" if o.live
         end
 
         def visit_ChangeColumnDefinition(o)
