@@ -110,7 +110,7 @@ module ActiveRecord
         uint16: { name: 'UInt16' },
         uint32: { name: 'UInt32' },
         uint64: { name: 'UInt64' },
-        # uint128: { name: 'UInt128' }, not yet implemented in clickhouse
+        # UInt128 is not supported yet
         uint256: { name: 'UInt256' },
       }.freeze
 
@@ -187,8 +187,12 @@ module ActiveRecord
         register_class_with_limit m, %r(Int128), Type::Integer
         register_class_with_limit m, %r(Int256), Type::Integer
 
-        m.alias_type 'Int16', 'Int8'
-        m.alias_type 'Int32', 'Int8'
+        register_class_with_limit m, %r(Uint8), Type::UnsignedInteger
+        register_class_with_limit m, %r(UInt16), Type::UnsignedInteger
+        register_class_with_limit m, %r(UInt32), Type::UnsignedInteger
+        register_class_with_limit m, %r(UInt64), Type::UnsignedInteger
+        # UInt128 is not supported yet
+        register_class_with_limit m, %r(UInt256), Type::UnsignedInteger
 
         m.register_type %r{\Adecimal}i do |sql_type|
           scale = extract_scale(sql_type)
